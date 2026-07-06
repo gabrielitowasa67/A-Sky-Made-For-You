@@ -1,1 +1,5 @@
-console.log("A Sky Made For You v1.0");
+window.addEventListener("load", () => {
+
+    console.log("A Sky Made For You");
+
+});

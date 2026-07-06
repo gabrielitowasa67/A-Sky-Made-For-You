@@ -1,116 +1,51 @@
-@keyframes floating{
-
-0%{
-
-transform:translateY(0px);
-
-}
-
-50%{
-
-transform:translateY(-15px);
-
-}
-
-100%{
-
-transform:translateY(0px);
-
-}
-
-}
-
-.moon{
-
-animation:floating 6s ease-in-out infinite;
-
-}
-.star{
-
-position:absolute;
-
-background:white;
-
-border-radius:50%;
-
-opacity:.8;
-
-box-shadow:
-
-0 0 8px white,
-
-0 0 15px #7dd3fc;
-
-animation:twinkle infinite;
-
-}
-
 @keyframes twinkle{
+  from{
+    opacity:.2;
+    transform:scale(.8);
+  }
 
-0%{
-
-opacity:.2;
-transform:scale(.8);
-
+  to{
+    opacity:1;
+    transform:scale(1.4);
+  }
 }
 
-50%{
+@keyframes auroraMove{
+  from{
+    transform:translateX(-40px) scale(1);
+  }
 
-opacity:1;
-transform:scale(1.4);
-
+  to{
+    transform:translateX(40px) scale(1.1);
+  }
 }
 
-100%{
+@keyframes floating{
+  0%,100%{
+    transform:translateY(0);
+  }
 
-opacity:.3;
-transform:scale(.9);
-
+  50%{
+    transform:translateY(-18px);
+  }
 }
 
-}
-.shooting-star{
+@keyframes floatCat{
+  0%,100%{
+    transform:translateY(0);
+  }
 
-position:fixed;
-
-width:180px;
-
-height:2px;
-
-background:linear-gradient(
-90deg,
-white,
-transparent
-);
-
-z-index:999;
-
-pointer-events:none;
-
-animation:shoot 3s linear forwards;
-
+  50%{
+    transform:translateY(-12px);
+  }
 }
 
-@keyframes shoot{
+@keyframes tail{
+  from{
+    transform:rotate(14deg);
+  }
 
-0%{
-
-transform:
-translate(0,0)
-rotate(-25deg);
-
-opacity:1;
-
-}
-
-100%{
-
-transform:
-translate(-700px,400px)
-rotate(-25deg);
-
-opacity:0;
-
-}
-
+  to{
+    transform:rotate(-18deg);
+  }
 }
