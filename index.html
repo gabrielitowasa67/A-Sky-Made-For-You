@@ -3,161 +3,87 @@
 
 <head>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>A Sky Made for You</title>
+<title>A Sky Made For You</title>
 
-    <link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/animations.css">
+<link rel="stylesheet" href="css/responsive.css">
 
 </head>
 
 <body>
 
-    <!-- INTRO -->
+<!-- ================= INTRO ================= -->
 
-    <section id="intro">
+<section id="intro">
 
-        <div class="intro-content">
+<div id="stars"></div>
 
-            <h1>A Sky Made for You</h1>
+<div class="aurora"></div>
 
-            <p>Every star leads me back to you ✨</p>
+<div class="moon"></div>
 
-            <button id="enterBtn">
-                Entrar al cielo
-            </button>
+<div class="hero">
 
-        </div>
+<h1>A Sky Made For You</h1>
 
-    </section>
+<p>Every star remembers us.</p>
 
-    <!-- HERO -->
+<button id="enterBtn">
 
-    <section id="hero">
+Enter Our Universe
 
-        <div id="stars"></div>
+</button>
 
-        <div class="moon"></div>
+</div>
 
-        <div class="aurora"></div>
+</section>
 
-        <div class="hero-content">
+<!-- ================= MAIN ================= -->
 
-            <h2>Hola, Sapita 💙</h2>
+<main id="world">
 
-            <p>
+<section id="hero"></section>
 
-                Hice este pequeño universo solamente para ti.
+<section id="tommy"></section>
 
-            </p>
+<section id="gallery"></section>
 
-        </div>
+<section id="timeline"></section>
 
-    </section>
+<section id="letter"></section>
 
-    <!-- GALERÍA -->
+<footer id="footer">
 
-    <section id="gallery">
+<p>Made with ❤️ for Sapita.</p>
 
-        <h2>Nuestros recuerdos 📸</h2>
+</footer>
 
-        <div class="gallery-grid">
+</main>
 
-            <div class="photo">
-                <img src="assets/photos/foto1.jpg">
-            </div>
+<audio
+id="music"
+loop>
 
-            <div class="photo">
-                <img src="assets/photos/foto2.jpg">
-            </div>
+<source src="assets/music/music.mp3" type="audio/mpeg">
 
-            <div class="photo">
-                <img src="assets/photos/foto3.jpg">
-            </div>
+</audio>
 
-        </div>
-
-    </section>
-
-    <!-- TIMELINE -->
-
-    <section id="timeline">
-
-        <h2>Nuestra Historia 💙</h2>
-
-        <div class="timeline">
-
-            <div class="card">
-
-                <h3>29 Enero 2023</h3>
-
-                <p>
-                    El día donde comenzó nuestro pequeño universo.
-                </p>
-
-            </div>
-
-            <div class="card">
-
-                <h3>Tommy</h3>
-
-                <p>
-                    Nuestro gatito favorito también forma parte de esta historia.
-                </p>
-
-            </div>
-
-            <div class="card">
-
-                <h3>Hoy</h3>
-
-                <p>
-
-                    Y todavía sigo enamorándome de ti cada día.
-
-                </p>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- CARTA -->
-
-    <section id="letter">
-
-        <h2>Una carta para ti 💌</h2>
-
-        <div class="letter">
-
-            <p id="letterText"></p>
-
-        </div>
-
-    </section>
-
-    <!-- FINAL -->
-
-    <section id="ending">
-
-        <h2>
-
-            Gracias por existir,
-
-            <span>Sapita 💙</span>
-
-        </h2>
-
-        <p id="counter"></p>
-
-    </section>
-
-    <script src="script.js"></script>
+<script src="js/script.js"></script>
+<script src="js/stars.js"></script>
+<script src="js/intro.js"></script>
+<script src="js/tommy.js"></script>
+<script src="js/gallery.js"></script>
+<script src="js/timeline.js"></script>
+<script src="js/letter.js"></script>
 
 </body>
 

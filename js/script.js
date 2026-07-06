@@ -1,0 +1,1 @@
+console.log("A Sky Made For You v1.0");

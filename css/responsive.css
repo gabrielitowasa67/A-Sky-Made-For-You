@@ -1,0 +1,49 @@
+@media(max-width:768px){
+
+.hero h1{
+
+font-size:3rem;
+
+}
+
+.hero p{
+
+font-size:1rem;
+
+}
+
+#enterBtn{
+
+padding:15px 35px;
+
+}
+
+.moon{
+
+width:110px;
+height:110px;
+
+}
+
+}
+.hero-container{
+
+flex-direction:column;
+
+text-align:center;
+
+}
+
+.hero-text h2{
+
+font-size:2.8rem;
+
+}
+
+.planet{
+
+width:220px;
+
+height:220px;
+
+}
