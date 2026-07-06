@@ -1,0 +1,607 @@
+/* =====================================================
+   A SKY MADE FOR YOU
+   STYLE.CSS
+   ===================================================== */
+
+:root{
+
+    --bg:#040814;
+    --bg2:#08152f;
+    --turquoise:#67e8f9;
+    --white:#ffffff;
+    --soft:#dffcff;
+    --card:rgba(255,255,255,.08);
+
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+
+    font-family:'Poppins',sans-serif;
+    background:linear-gradient(to bottom,#02040a,#06152d,#02040a);
+
+    color:white;
+
+    overflow-x:hidden;
+
+}
+
+section{
+
+    width:100%;
+    min-height:100vh;
+
+    padding:80px 10%;
+
+    position:relative;
+
+}
+
+/* ==========================
+   INTRO
+========================== */
+
+#intro{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+
+    background:
+    radial-gradient(circle at top,#16396d,#02040a);
+
+}
+
+.intro-content{
+
+    z-index:2;
+
+}
+
+.intro-content h1{
+
+    font-family:'Great Vibes',cursive;
+
+    font-size:90px;
+
+    color:white;
+
+    text-shadow:0 0 35px var(--turquoise);
+
+}
+
+.intro-content p{
+
+    margin-top:20px;
+
+    color:var(--soft);
+
+    font-size:22px;
+
+}
+
+#enterBtn{
+
+    margin-top:40px;
+
+    padding:18px 45px;
+
+    border:none;
+
+    border-radius:50px;
+
+    background:var(--turquoise);
+
+    color:#03111b;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    transition:.35s;
+
+    font-size:18px;
+
+    box-shadow:0 0 35px rgba(103,232,249,.6);
+
+}
+
+#enterBtn:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:0 0 60px rgba(103,232,249,.8);
+
+}
+
+/* ==========================
+   HERO
+========================== */
+
+#hero{
+
+    overflow:hidden;
+
+    background:
+    radial-gradient(circle at top,#12335d,#02040a 75%);
+
+}
+
+.hero-content{
+
+    position:relative;
+
+    z-index:5;
+
+    text-align:center;
+
+    margin-top:260px;
+
+}
+
+.hero-content h2{
+
+    font-size:60px;
+
+    color:var(--turquoise);
+
+}
+
+.hero-content p{
+
+    margin-top:15px;
+
+    font-size:22px;
+
+    color:var(--soft);
+
+}
+
+/* ==========================
+   LUNA
+========================== */
+
+.moon{
+
+    position:absolute;
+
+    right:8%;
+
+    top:80px;
+
+    width:170px;
+
+    height:170px;
+
+    border-radius:50%;
+
+    background:#fff8d2;
+
+    box-shadow:
+    0 0 50px #fff6b0,
+    0 0 120px #fff6b0;
+
+}
+
+/* ==========================
+   AURORA
+========================== */
+
+.aurora{
+
+    position:absolute;
+
+    width:140%;
+
+    height:450px;
+
+    top:-120px;
+
+    left:-20%;
+
+    filter:blur(45px);
+
+    background:
+
+    linear-gradient(
+    120deg,
+
+    transparent,
+
+    rgba(103,232,249,.22),
+
+    rgba(110,255,221,.18),
+
+    rgba(180,255,250,.12),
+
+    transparent
+
+    );
+
+    animation:aurora 12s ease-in-out infinite alternate;
+
+}
+
+@keyframes aurora{
+
+    from{
+
+        transform:
+        translateX(-60px)
+        rotate(-3deg);
+
+    }
+
+    to{
+
+        transform:
+        translateX(70px)
+        rotate(3deg);
+
+    }
+
+}
+
+/* ==========================
+   ESTRELLAS
+========================== */
+
+#stars{
+
+    position:absolute;
+
+    inset:0;
+
+    overflow:hidden;
+
+}
+
+.star{
+
+    position:absolute;
+
+    width:2px;
+
+    height:2px;
+
+    border-radius:50%;
+
+    background:white;
+
+    animation:twinkle 2s infinite alternate;
+
+}
+
+@keyframes twinkle{
+
+    from{
+
+        opacity:.2;
+
+    }
+
+    to{
+
+        opacity:1;
+
+    }
+
+}
+/* ==========================================
+   GALERÍA
+========================================== */
+
+#gallery{
+
+    background:linear-gradient(to bottom,#02040a,#071528);
+
+    text-align:center;
+
+}
+
+#gallery h2{
+
+    font-size:48px;
+
+    color:var(--turquoise);
+
+    margin-bottom:60px;
+
+}
+
+.gallery-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+
+    gap:40px;
+
+}
+
+.photo{
+
+    background:white;
+
+    padding:15px;
+
+    border-radius:10px;
+
+    box-shadow:0 20px 45px rgba(0,0,0,.45);
+
+    transition:.4s;
+
+    transform:rotate(-2deg);
+
+}
+
+.photo:nth-child(2){
+
+    transform:rotate(3deg);
+
+}
+
+.photo:nth-child(3){
+
+    transform:rotate(-4deg);
+
+}
+
+.photo:hover{
+
+    transform:scale(1.05) rotate(0deg);
+
+}
+
+.photo img{
+
+    width:100%;
+
+    height:330px;
+
+    object-fit:cover;
+
+    border-radius:6px;
+
+}
+
+/* ==========================================
+   TIMELINE
+========================================== */
+
+#timeline{
+
+    background:linear-gradient(to bottom,#071528,#030712);
+
+    text-align:center;
+
+}
+
+#timeline h2{
+
+    color:var(--turquoise);
+
+    font-size:48px;
+
+    margin-bottom:70px;
+
+}
+
+.timeline{
+
+    max-width:900px;
+
+    margin:auto;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:40px;
+
+}
+
+.card{
+
+    background:rgba(255,255,255,.06);
+
+    border:1px solid rgba(103,232,249,.25);
+
+    border-radius:20px;
+
+    padding:35px;
+
+    backdrop-filter:blur(12px);
+
+    transition:.35s;
+
+}
+
+.card:hover{
+
+    transform:translateY(-8px);
+
+    box-shadow:0 0 35px rgba(103,232,249,.25);
+
+}
+
+.card h3{
+
+    color:var(--turquoise);
+
+    margin-bottom:12px;
+
+}
+
+.card p{
+
+    color:var(--soft);
+
+    line-height:1.7;
+
+}
+
+/* ==========================================
+   CARTA
+========================================== */
+
+#letter{
+
+    background:linear-gradient(to bottom,#030712,#06152d);
+
+    text-align:center;
+
+}
+
+#letter h2{
+
+    color:var(--turquoise);
+
+    font-size:48px;
+
+    margin-bottom:50px;
+
+}
+
+.letter{
+
+    max-width:900px;
+
+    margin:auto;
+
+    background:white;
+
+    color:#06152d;
+
+    padding:50px;
+
+    border-radius:20px;
+
+    box-shadow:0 25px 60px rgba(0,0,0,.45);
+
+    text-align:left;
+
+    font-size:20px;
+
+    line-height:1.9;
+
+}
+
+/* ==========================================
+   FINAL
+========================================== */
+
+#ending{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    flex-direction:column;
+
+    text-align:center;
+
+    background:
+    radial-gradient(circle at top,#12335d,#02040a);
+
+}
+
+#ending h2{
+
+    font-size:60px;
+
+    font-family:'Great Vibes',cursive;
+
+}
+
+#ending span{
+
+    color:var(--turquoise);
+
+}
+
+#counter{
+
+    margin-top:25px;
+
+    font-size:24px;
+
+    color:var(--soft);
+
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media(max-width:768px){
+
+.intro-content h1{
+
+font-size:58px;
+
+}
+
+.hero-content{
+
+margin-top:180px;
+
+}
+
+.hero-content h2{
+
+font-size:42px;
+
+}
+
+.hero-content p{
+
+font-size:18px;
+
+}
+
+#gallery h2,
+#timeline h2,
+#letter h2{
+
+font-size:36px;
+
+}
+
+.moon{
+
+width:110px;
+height:110px;
+
+}
+
+.letter{
+
+padding:30px;
+
+font-size:18px;
+
+}
+
+#ending h2{
+
+font-size:42px;
+
+}
+
+}
