@@ -38,6 +38,10 @@
     var content = section.querySelector(".reader-content");
     var external = section.querySelector(".reader-external");
     var onlyFavorites = false;
+    var currentManga = null;
+    var currentVolume = null;
+    var activeDownload = null;
+    var activeBlobUrl = null;
     var favorites;
     try { favorites = JSON.parse(localStorage.getItem("less-manga-favorites") || "[]"); } catch (error) { favorites = []; }
 
@@ -53,7 +57,17 @@
       }).join("") : '<div class="manga-empty">No encontré ningún manga con esa búsqueda ✦</div>';
     }
 
-    function showShelf(manga) {
+    function clearPdfLoad() {
+      if (activeDownload) activeDownload.abort();
+      activeDownload = null;
+      if (activeBlobUrl) URL.revokeObjectURL(activeBlobUrl);
+      activeBlobUrl = null;
+    }
+
+    function showShelf(manga, updateHistory) {
+      clearPdfLoad();
+      currentManga = manga;
+      currentVolume = null;
       section.querySelector(".reader-title").innerHTML = '<strong>' + manga.title + '</strong><small>Selecciona un tomo</small>';
       external.hidden = true;
       var buttons = "";
@@ -64,20 +78,57 @@
       reader.classList.add("open");
       section.classList.add("reader-active");
       document.body.style.overflow = "hidden";
+      if (updateHistory !== false) history.pushState({ mangaReader: true, view: "shelf", mangaId: manga.id }, "", "#tomos-" + manga.id);
     }
 
-    function showPdf(manga, volume) {
+    async function showPdf(manga, volume, updateHistory) {
+      clearPdfLoad();
+      currentManga = manga;
+      currentVolume = volume;
       var driveId = manga.driveIds && manga.driveIds[volume - 1];
-      var path = driveId ? "https://drive.google.com/file/d/" + driveId + "/preview" : pdfPath(manga, volume);
-      var openPath = driveId ? "https://drive.google.com/file/d/" + driveId + "/view" : path;
+      var path = driveId ? "https://drive.usercontent.google.com/download?id=" + driveId + "&export=download&confirm=t" : pdfPath(manga, volume);
       section.querySelector(".reader-title").innerHTML = '<strong>' + manga.title + ' · Tomo ' + volume + '</strong><button class="reader-back" type="button">← Volver a los tomos</button>';
-      external.href = openPath;
+      external.href = path;
+      external.textContent = "Descargar PDF ↗";
       external.hidden = false;
-      content.innerHTML = driveId
-        ? '<iframe class="pdf-viewer" src="' + path + '" title="' + manga.title + ' tomo ' + volume + '" allow="autoplay" loading="lazy"></iframe>'
-        : '<object class="pdf-viewer" data="' + path + '" type="application/pdf"><div class="pdf-fallback"><span>📖</span><h3>No se pudo mostrar el PDF aquí</h3><p>Comprueba que el archivo se llame <strong>tomo-' + twoDigits(volume) + '.pdf</strong>.</p><a href="' + path + '" target="_blank">Abrir el PDF</a></div></object>';
+      if (updateHistory !== false) history.pushState({ mangaReader: true, view: "pdf", mangaId: manga.id, volume: volume }, "", "#" + manga.id + "-tomo-" + twoDigits(volume));
       var back = section.querySelector(".reader-back");
-      if (back) back.addEventListener("click", function () { showShelf(manga); });
+      if (back) back.addEventListener("click", function () { history.back(); });
+
+      if (!driveId) {
+        content.innerHTML = '<object class="pdf-viewer" data="' + path + '" type="application/pdf"><div class="pdf-fallback"><span>📖</span><h3>No se pudo mostrar el PDF aquí</h3><p>Comprueba que el archivo se llame <strong>tomo-' + twoDigits(volume) + '.pdf</strong>.</p></div></object>';
+        return;
+      }
+
+      content.innerHTML = '<div class="pdf-loading"><span>Descargando el tomo para leerlo…</span><div class="pdf-progress"><i></i></div><strong>0%</strong><small>Los tomos grandes pueden tardar unos segundos.</small></div>';
+      activeDownload = new AbortController();
+      try {
+        var response = await fetch(path, { signal: activeDownload.signal });
+        if (!response.ok) throw new Error("No se pudo descargar el tomo");
+        var total = Number(response.headers.get("content-length")) || 0;
+        var readerStream = response.body.getReader();
+        var chunks = [];
+        var received = 0;
+        while (true) {
+          var result = await readerStream.read();
+          if (result.done) break;
+          chunks.push(result.value);
+          received += result.value.length;
+          if (total && currentManga === manga && currentVolume === volume) {
+            var percent = Math.round((received / total) * 100);
+            var bar = content.querySelector(".pdf-progress i");
+            var label = content.querySelector(".pdf-loading strong");
+            if (bar) bar.style.width = percent + "%";
+            if (label) label.textContent = percent + "%";
+          }
+        }
+        if (currentManga !== manga || currentVolume !== volume) return;
+        activeBlobUrl = URL.createObjectURL(new Blob(chunks, { type: "application/pdf" }));
+        content.innerHTML = '<iframe class="pdf-viewer" src="' + activeBlobUrl + '" title="' + manga.title + ' tomo ' + volume + '"></iframe>';
+      } catch (error) {
+        if (error.name === "AbortError") return;
+        content.innerHTML = '<div class="reader-setup"><span>📖</span><h3>No se pudo cargar el tomo</h3><p>Comprueba tu conexión e inténtalo nuevamente.</p><a class="manga-read" href="' + path + '">Descargar PDF</a></div>';
+      }
     }
 
     grid.addEventListener("click", function (event) {
@@ -100,9 +151,20 @@
     });
     search.addEventListener("input", render);
     filter.addEventListener("click", function () { onlyFavorites = !onlyFavorites; filter.textContent = onlyFavorites ? "♥ Ver todos" : "♡ Mis favoritos"; render(); });
-    function closeReader() { reader.classList.remove("open"); section.classList.remove("reader-active"); content.innerHTML = ""; document.body.style.overflow = ""; }
+    function closeReader() { clearPdfLoad(); currentManga = null; currentVolume = null; reader.classList.remove("open"); section.classList.remove("reader-active"); content.innerHTML = ""; document.body.style.overflow = ""; }
     section.querySelector(".reader-close").addEventListener("click", closeReader);
     document.addEventListener("keydown", function (event) { if (event.key === "Escape" && reader.classList.contains("open")) closeReader(); });
+    window.addEventListener("popstate", function (event) {
+      var state = event.state;
+      if (state && state.mangaReader) {
+        var manga = mangas.find(function (item) { return item.id === state.mangaId; });
+        if (state.view === "pdf") showPdf(manga, state.volume, false);
+        else showShelf(manga, false);
+      } else if (reader.classList.contains("open")) {
+        closeReader();
+        section.scrollIntoView({ block: "start" });
+      }
+    });
     render();
   }
 
