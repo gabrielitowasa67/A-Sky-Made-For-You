@@ -47,6 +47,10 @@
     var currentVolume = null;
     var activeDownload = null;
     var activeBlobUrl = null;
+    var activePdfTask = null;
+    var activePdfDocument = null;
+    var activeCanvasRender = null;
+    var pdfLibraryPromise = null;
     var favorites;
     try { favorites = JSON.parse(localStorage.getItem("less-manga-favorites") || "[]"); } catch (error) { favorites = []; }
 
@@ -67,6 +71,69 @@
       activeDownload = null;
       if (activeBlobUrl) URL.revokeObjectURL(activeBlobUrl);
       activeBlobUrl = null;
+      if (activeCanvasRender) activeCanvasRender.cancel();
+      activeCanvasRender = null;
+      if (activePdfTask) activePdfTask.destroy();
+      activePdfTask = null;
+      activePdfDocument = null;
+    }
+
+    function loadPdfLibrary() {
+      if (!pdfLibraryPromise) {
+        pdfLibraryPromise = import("https://cdn.jsdelivr.net/npm/pdfjs-dist@6.1.200/build/pdf.min.mjs").then(function (pdfjs) {
+          pdfjs.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.1.200/build/pdf.worker.min.mjs";
+          return pdfjs;
+        });
+      }
+      return pdfLibraryPromise;
+    }
+
+    async function openPagedReader(manga, volume, driveId) {
+      content.innerHTML = '<div class="pdf-loading"><span>Preparando el lector…</span><div class="pdf-progress"><i style="width:18%"></i></div><strong>Un momento</strong><small>Solo cargaremos las páginas que vayas leyendo.</small></div>';
+      activeDownload = new AbortController();
+      var pdfjs = await loadPdfLibrary();
+      var total = manga.driveSizes[volume - 1];
+      var transport = new pdfjs.PDFDataRangeTransport(total, new Uint8Array(0));
+      transport.requestDataRange = function (begin, end) {
+        fetchRangeWithRetry(driveId, begin, end - 1, activeDownload.signal).then(function (part) {
+          transport.onDataRange(begin, part.bytes);
+        });
+      };
+      transport.abort = function () { if (activeDownload) activeDownload.abort(); };
+      activePdfTask = pdfjs.getDocument({ range: transport, length: total, disableStream: true, disableAutoFetch: true, rangeChunkSize: 4 * 1024 * 1024 });
+      activePdfDocument = await activePdfTask.promise;
+      if (currentManga !== manga || currentVolume !== volume) return;
+
+      content.innerHTML = '<div class="paged-reader"><div class="page-stage"><canvas class="manga-page"></canvas><div class="page-busy">Cargando página…</div></div><nav class="page-controls"><button class="page-prev" type="button">← Anterior</button><span><strong class="page-current">1</strong> / ' + activePdfDocument.numPages + '</span><button class="page-next" type="button">Siguiente →</button></nav></div>';
+      var pageNumber = 1;
+      var canvas = content.querySelector(".manga-page");
+      var busy = content.querySelector(".page-busy");
+      var currentLabel = content.querySelector(".page-current");
+
+      async function renderPage(number) {
+        if (activeCanvasRender) activeCanvasRender.cancel();
+        busy.hidden = false;
+        var page = await activePdfDocument.getPage(number);
+        var base = page.getViewport({ scale: 1 });
+        var available = Math.min(content.clientWidth - 24, 900);
+        var scale = Math.max(.5, available / base.width);
+        var viewport = page.getViewport({ scale: scale });
+        var outputScale = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(viewport.width * outputScale);
+        canvas.height = Math.floor(viewport.height * outputScale);
+        canvas.style.width = Math.floor(viewport.width) + "px";
+        canvas.style.height = Math.floor(viewport.height) + "px";
+        activeCanvasRender = page.render({ canvasContext: canvas.getContext("2d"), viewport: viewport, transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0] });
+        await activeCanvasRender.promise;
+        busy.hidden = true;
+        currentLabel.textContent = number;
+        content.querySelector(".page-prev").disabled = number === 1;
+        content.querySelector(".page-next").disabled = number === activePdfDocument.numPages;
+        content.scrollTop = 0;
+      }
+      content.querySelector(".page-prev").addEventListener("click", function () { if (pageNumber > 1) { pageNumber -= 1; renderPage(pageNumber); } });
+      content.querySelector(".page-next").addEventListener("click", function () { if (pageNumber < activePdfDocument.numPages) { pageNumber += 1; renderPage(pageNumber); } });
+      await renderPage(pageNumber);
     }
 
     async function fetchRangeWithRetry(driveId, start, end, signal) {
@@ -119,50 +186,13 @@
       var back = section.querySelector(".reader-back");
       if (back) back.addEventListener("click", function () { history.back(); });
 
-      var mobileDevice = window.matchMedia("(max-width: 900px)").matches ||
-        window.matchMedia("(pointer: coarse)").matches ||
-        navigator.maxTouchPoints > 1 ||
-        screen.width < 900 ||
-        /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-      if (driveId && mobileDevice) {
-        var megabytes = Math.round(manga.driveSizes[volume - 1] / 1048576);
-        external.hidden = true;
-        content.innerHTML = '<div class="mobile-pdf-card"><span>📖</span><h3>Listo para leer</h3><p>Este tomo pesa aproximadamente <strong>' + megabytes + ' MB</strong>. En celular se abrirá con el lector PDF del teléfono.</p><a class="mobile-pdf-open" href="' + path + '" target="_blank" rel="noopener">Abrir tomo ' + volume + '</a><small>La descarga puede tardar según tu conexión, pero puedes seguir usando la página mientras tanto.</small></div>';
-        return;
-      }
-
       if (!driveId) {
         content.innerHTML = '<object class="pdf-viewer" data="' + path + '" type="application/pdf"><div class="pdf-fallback"><span>📖</span><h3>No se pudo mostrar el PDF aquí</h3><p>Comprueba que el archivo se llame <strong>tomo-' + twoDigits(volume) + '.pdf</strong>.</p></div></object>';
         return;
       }
 
-      content.innerHTML = '<div class="pdf-loading"><span>Descargando el tomo para leerlo…</span><div class="pdf-progress"><i></i></div><strong>0%</strong><small>Los tomos grandes pueden tardar unos segundos.</small></div>';
-      activeDownload = new AbortController();
       try {
-        var total = manga.driveSizes[volume - 1];
-        var chunkSize = 4 * 1024 * 1024;
-        var chunks = [];
-        var received = 0;
-        for (var start = 0; start < total; start += chunkSize) {
-          var end = Math.min(start + chunkSize - 1, total - 1);
-          var downloadPart = await fetchRangeWithRetry(driveId, start, end, activeDownload.signal);
-          if (downloadPart.complete) {
-            chunks = [downloadPart.bytes];
-            received = downloadPart.bytes.length;
-          } else {
-            chunks.push(downloadPart.bytes);
-            received += downloadPart.bytes.length;
-          }
-          var percent = Math.min(100, Math.round((received / total) * 100));
-          var bar = content.querySelector(".pdf-progress i");
-          var label = content.querySelector(".pdf-loading strong");
-          if (bar) bar.style.width = percent + "%";
-          if (label) label.textContent = percent + "%";
-          if (downloadPart.complete) break;
-        }
-        if (currentManga !== manga || currentVolume !== volume) return;
-        activeBlobUrl = URL.createObjectURL(new Blob(chunks, { type: "application/pdf" }));
-        content.innerHTML = '<iframe class="pdf-viewer" src="' + activeBlobUrl + '" title="' + manga.title + ' tomo ' + volume + '"></iframe>';
+        await openPagedReader(manga, volume, driveId);
       } catch (error) {
         if (error.name === "AbortError") return;
         content.innerHTML = '<div class="reader-setup"><span>📖</span><h3>No se pudo cargar el tomo</h3><p>Comprueba tu conexión e inténtalo nuevamente.</p><button class="manga-read retry-pdf" type="button">Intentar otra vez</button><a class="reader-download" href="' + path + '">Descargar PDF</a><small class="reader-error">' + String(error.message || error) + '</small></div>';
