@@ -74,6 +74,8 @@
 .pdf-loading > small { color: #94a3b8; }
 .pdf-progress { height: 10px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.1); }
 .pdf-progress i { width: 0; height: 100%; display: block; border-radius: inherit; background: linear-gradient(90deg,#8b5cf6,#67e8f9); transition: width .2s ease; }
+.reader-download { display: block; margin-top: 14px; color: #c4b5fd; }
+.reader-error { display: block; margin-top: 14px; color: #64748b; font-size: .72rem; }
 
 @media (max-width: 900px) { .manga-grid { grid-template-columns: repeat(2, 1fr); } .volume-shelf { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 520px) {

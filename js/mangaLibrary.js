@@ -77,8 +77,11 @@
             signal: signal,
             headers: { Range: "bytes=" + start + "-" + end }
           });
-          if (response.status !== 206) throw new Error("Respuesta " + response.status);
-          return new Uint8Array(await response.arrayBuffer());
+          if (response.status !== 200 && response.status !== 206) throw new Error("Respuesta " + response.status);
+          return {
+            bytes: new Uint8Array(await response.arrayBuffer()),
+            complete: response.status === 200
+          };
         } catch (error) {
           if (error.name === "AbortError") throw error;
           lastError = error;
@@ -133,21 +136,29 @@
         var received = 0;
         for (var start = 0; start < total; start += chunkSize) {
           var end = Math.min(start + chunkSize - 1, total - 1);
-          var chunk = await fetchRangeWithRetry(path, start, end, activeDownload.signal);
-          chunks.push(chunk);
-          received += chunk.length;
+          var downloadPart = await fetchRangeWithRetry(path, start, end, activeDownload.signal);
+          if (downloadPart.complete) {
+            chunks = [downloadPart.bytes];
+            received = downloadPart.bytes.length;
+          } else {
+            chunks.push(downloadPart.bytes);
+            received += downloadPart.bytes.length;
+          }
           var percent = Math.min(100, Math.round((received / total) * 100));
           var bar = content.querySelector(".pdf-progress i");
           var label = content.querySelector(".pdf-loading strong");
           if (bar) bar.style.width = percent + "%";
           if (label) label.textContent = percent + "%";
+          if (downloadPart.complete) break;
         }
         if (currentManga !== manga || currentVolume !== volume) return;
         activeBlobUrl = URL.createObjectURL(new Blob(chunks, { type: "application/pdf" }));
         content.innerHTML = '<iframe class="pdf-viewer" src="' + activeBlobUrl + '" title="' + manga.title + ' tomo ' + volume + '"></iframe>';
       } catch (error) {
         if (error.name === "AbortError") return;
-        content.innerHTML = '<div class="reader-setup"><span>📖</span><h3>No se pudo cargar el tomo</h3><p>Comprueba tu conexión e inténtalo nuevamente.</p><a class="manga-read" href="' + path + '">Descargar PDF</a></div>';
+        content.innerHTML = '<div class="reader-setup"><span>📖</span><h3>No se pudo cargar el tomo</h3><p>Comprueba tu conexión e inténtalo nuevamente.</p><button class="manga-read retry-pdf" type="button">Intentar otra vez</button><a class="reader-download" href="' + path + '">Descargar PDF</a><small class="reader-error">' + String(error.message || error) + '</small></div>';
+        var retry = content.querySelector(".retry-pdf");
+        if (retry) retry.addEventListener("click", function () { showPdf(manga, volume, false); });
       }
     }
 
