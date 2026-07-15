@@ -119,7 +119,11 @@
       var back = section.querySelector(".reader-back");
       if (back) back.addEventListener("click", function () { history.back(); });
 
-      var mobileDevice = window.matchMedia("(max-width: 700px)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      var mobileDevice = window.matchMedia("(max-width: 900px)").matches ||
+        window.matchMedia("(pointer: coarse)").matches ||
+        navigator.maxTouchPoints > 1 ||
+        screen.width < 900 ||
+        /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
       if (driveId && mobileDevice) {
         var megabytes = Math.round(manga.driveSizes[volume - 1] / 1048576);
         external.hidden = true;
