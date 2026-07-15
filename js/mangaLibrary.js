@@ -18,6 +18,11 @@
       "1FS-mZg4C2HZ_WurikCgIha5HdOkmbWP4", "1KuivUW3P3a7EfwoLaiS5Gg2IACSDN4kU", "10cO999RgA7gYFn5o1BSdR6EHT88GTE-d", "1r4KrmoWOjrUSeGNb4OXaAND-xhL6aKKw",
       "1tLc4D5B1cPPhHgZt35TSIjEvIcNoyDwf", "1UeSHeGGz9fD0lUcoGVjgtUn7Os_9LMpq", "1sFiTTDxuN6FoaC_JSbOSyiuIOL3LCUt9", "1Ur5dl0Ls4H0eNAts8wlqwTBgXfXWl9U0",
       "1aL0tKMkxBXU-VvVpKqAch21xKWoh6ZsT", "16H5BAiTUEYvHHRbJlE8fzn17nf-TshDe", "10ZSCOkJ5VoOTyAQDgiiRUxV7dcMLxYko", "1vzCYosfvg7yPWOoZn3jICIeCKm1lEKmz"
+    ], driveSizes: [
+      89381385, 103351531, 99988514, 103548528, 115088354, 93864678,
+      105469802, 104392419, 110796001, 90003471, 103402976, 93227551,
+      93774696, 100116367, 104354396, 99773317, 127205538, 110482156,
+      125446619, 123678954, 124776539, 117321129, 99891576, 113355017
     ] },
     { id: "jojolion", part: 8, title: "JoJolion", total: 27, cover: "jojolion.jpg", color: "#be185d" }
   ];
@@ -64,6 +69,25 @@
       activeBlobUrl = null;
     }
 
+    async function fetchRangeWithRetry(url, start, end, signal) {
+      var lastError;
+      for (var attempt = 1; attempt <= 3; attempt += 1) {
+        try {
+          var response = await fetch(url, {
+            signal: signal,
+            headers: { Range: "bytes=" + start + "-" + end }
+          });
+          if (response.status !== 206) throw new Error("Respuesta " + response.status);
+          return new Uint8Array(await response.arrayBuffer());
+        } catch (error) {
+          if (error.name === "AbortError") throw error;
+          lastError = error;
+          if (attempt < 3) await new Promise(function (resolve) { setTimeout(resolve, attempt * 700); });
+        }
+      }
+      throw lastError;
+    }
+
     function showShelf(manga, updateHistory) {
       clearPdfLoad();
       currentManga = manga;
@@ -103,24 +127,20 @@
       content.innerHTML = '<div class="pdf-loading"><span>Descargando el tomo para leerlo…</span><div class="pdf-progress"><i></i></div><strong>0%</strong><small>Los tomos grandes pueden tardar unos segundos.</small></div>';
       activeDownload = new AbortController();
       try {
-        var response = await fetch(path, { signal: activeDownload.signal });
-        if (!response.ok) throw new Error("No se pudo descargar el tomo");
-        var total = Number(response.headers.get("content-length")) || 0;
-        var readerStream = response.body.getReader();
+        var total = manga.driveSizes[volume - 1];
+        var chunkSize = 8 * 1024 * 1024;
         var chunks = [];
         var received = 0;
-        while (true) {
-          var result = await readerStream.read();
-          if (result.done) break;
-          chunks.push(result.value);
-          received += result.value.length;
-          if (total && currentManga === manga && currentVolume === volume) {
-            var percent = Math.round((received / total) * 100);
-            var bar = content.querySelector(".pdf-progress i");
-            var label = content.querySelector(".pdf-loading strong");
-            if (bar) bar.style.width = percent + "%";
-            if (label) label.textContent = percent + "%";
-          }
+        for (var start = 0; start < total; start += chunkSize) {
+          var end = Math.min(start + chunkSize - 1, total - 1);
+          var chunk = await fetchRangeWithRetry(path, start, end, activeDownload.signal);
+          chunks.push(chunk);
+          received += chunk.length;
+          var percent = Math.min(100, Math.round((received / total) * 100));
+          var bar = content.querySelector(".pdf-progress i");
+          var label = content.querySelector(".pdf-loading strong");
+          if (bar) bar.style.width = percent + "%";
+          if (label) label.textContent = percent + "%";
         }
         if (currentManga !== manga || currentVolume !== volume) return;
         activeBlobUrl = URL.createObjectURL(new Blob(chunks, { type: "application/pdf" }));
