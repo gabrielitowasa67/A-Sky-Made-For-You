@@ -53,6 +53,9 @@ gallery.innerHTML = `
 
 const envelopeCards = document.querySelectorAll(".envelope-card");
 const modal = document.getElementById("memoryModal");
+
+document.body.appendChild(modal);
+
 const memoryImg = document.getElementById("memoryImg");
 const memoryTitle = document.getElementById("memoryTitle");
 const memoryText = document.getElementById("memoryText");

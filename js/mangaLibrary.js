@@ -1,0 +1,110 @@
+(function () {
+  /*
+    Los PDF se reconocen con esta estructura:
+    assets/manga/pdfs/phantom-blood/tomo-01.pdf
+    assets/manga/pdfs/phantom-blood/tomo-02.pdf
+  */
+  var mangas = [
+    { id: "phantom-blood", part: 1, title: "Phantom Blood", total: 5, cover: "phantom-blood.jpg", color: "#991b1b" },
+    { id: "battle-tendency", part: 2, title: "Battle Tendency", total: 7, cover: "battle-tendency.jpg", color: "#0369a1" },
+    { id: "stardust-crusaders", part: 3, title: "Stardust Crusaders", total: 16, cover: "stardust-crusaders.jpg", color: "#6b21a8" },
+    { id: "diamond-unbreakable", part: 4, title: "Diamond is Unbreakable", total: 19, cover: "diamond-is-unbreakable.jpg", color: "#db2777" },
+    { id: "golden-wind", part: 5, title: "Golden Wind", total: 16, cover: "golden-wind.jpg", color: "#a16207" },
+    { id: "stone-ocean", part: 6, title: "Stone Ocean", total: 17, cover: "stone-ocean.jpg", color: "#0f766e" },
+    { id: "steel-ball-run", part: 7, title: "Steel Ball Run", total: 24, cover: "steel-ball-run.jpg", color: "#92400e", driveIds: [
+      "1NkD6efydhQuRafz4FOp-INaSiCnk3WHo", "11Y7PkWls6-f-RKhUoB61CxhM1vKacKiu", "10a9xOJEYg9zrL2-3RfaYyX400iMSHuMv", "11_SfET4B0UEvN14d5uMdR4ZoZ-BcarLM",
+      "1nTKqRpO6B_KSV3z3DvKTSBSDDQitjFvx", "13lHeUIgTeOAKpFSAUKL7vKnUXrwFU4V9", "1v5g_QVggts1iZ2t7OIqAdnuF4KcLbhTi", "1Vbpgcztzp-F-tFeP2h5eS8DqvN9FFh9C",
+      "17EL9A-QRg8hPzLEtjWjNStD5tHsHyKoJ", "1fmxLPae-qvLc3so7R4_bnKmQ1JGJ-OWn", "1xZh3tEHVWNnYN7ee5l31tp9We-dR4MNm", "18J9bDqahKwH8kX40WnpvmjdAjz5LWlqP",
+      "1FS-mZg4C2HZ_WurikCgIha5HdOkmbWP4", "1KuivUW3P3a7EfwoLaiS5Gg2IACSDN4kU", "10cO999RgA7gYFn5o1BSdR6EHT88GTE-d", "1r4KrmoWOjrUSeGNb4OXaAND-xhL6aKKw",
+      "1tLc4D5B1cPPhHgZt35TSIjEvIcNoyDwf", "1UeSHeGGz9fD0lUcoGVjgtUn7Os_9LMpq", "1sFiTTDxuN6FoaC_JSbOSyiuIOL3LCUt9", "1Ur5dl0Ls4H0eNAts8wlqwTBgXfXWl9U0",
+      "1aL0tKMkxBXU-VvVpKqAch21xKWoh6ZsT", "16H5BAiTUEYvHHRbJlE8fzn17nf-TshDe", "10ZSCOkJ5VoOTyAQDgiiRUxV7dcMLxYko", "1vzCYosfvg7yPWOoZn3jICIeCKm1lEKmz"
+    ] },
+    { id: "jojolion", part: 8, title: "JoJolion", total: 27, cover: "jojolion.jpg", color: "#be185d" }
+  ];
+
+  function twoDigits(number) { return String(number).padStart(2, "0"); }
+  function pdfPath(manga, volume) { return "assets/manga/pdfs/" + manga.id + "/tomo-" + twoDigits(volume) + ".pdf"; }
+
+  function init() {
+    var section = document.getElementById("manga-library");
+    if (!section || section.dataset.ready) return;
+    section.dataset.ready = "true";
+    section.innerHTML = '<div class="manga-shell"><header class="manga-heading"><span class="manga-kicker">Un rincón solo para ti</span><h2>La biblioteca de <em>Less</em></h2><p>Todos los mundos, aventuras y JoJos que quieras visitar, guardados bajo el mismo cielo.</p></header><div class="manga-toolbar"><input class="manga-search" type="search" placeholder="Buscar una parte..." aria-label="Buscar manga"><button class="manga-filter" type="button">♡ Mis favoritos</button></div><div class="manga-grid"></div></div><div class="manga-reader" role="dialog" aria-modal="true" aria-label="Lector de manga"><header class="reader-bar"><button class="reader-close" aria-label="Cerrar lector">×</button><div class="reader-title"></div><a class="reader-external" target="_blank" rel="noopener" hidden>Abrir PDF ↗</a></header><div class="reader-content"></div></div>';
+
+    var grid = section.querySelector(".manga-grid");
+    var search = section.querySelector(".manga-search");
+    var filter = section.querySelector(".manga-filter");
+    var reader = section.querySelector(".manga-reader");
+    var content = section.querySelector(".reader-content");
+    var external = section.querySelector(".reader-external");
+    var onlyFavorites = false;
+    var favorites;
+    try { favorites = JSON.parse(localStorage.getItem("less-manga-favorites") || "[]"); } catch (error) { favorites = []; }
+
+    function render() {
+      var query = search.value.toLowerCase().trim();
+      var visible = mangas.filter(function (manga) {
+        var matches = manga.title.toLowerCase().includes(query) || ("parte " + manga.part).includes(query);
+        return matches && (!onlyFavorites || favorites.includes(manga.id));
+      });
+      grid.innerHTML = visible.length ? visible.map(function (manga) {
+        var liked = favorites.includes(manga.id);
+        return '<article class="manga-card"><div class="manga-cover" style="--fallback:' + manga.color + '"><img src="assets/manga/' + manga.cover + '" alt="Portada de ' + manga.title + '" loading="lazy"><span class="manga-cover-number">' + manga.part + '</span></div><div class="manga-card-info"><small>PARTE ' + manga.part + ' · ' + manga.total + ' TOMOS</small><h3>' + manga.title + '</h3><div class="manga-actions"><button class="manga-read" data-read="' + manga.id + '">Ver tomos</button><button class="manga-favorite ' + (liked ? 'active' : '') + '" data-favorite="' + manga.id + '" aria-label="Guardar en favoritos">♥</button></div></div></article>';
+      }).join("") : '<div class="manga-empty">No encontré ningún manga con esa búsqueda ✦</div>';
+    }
+
+    function showShelf(manga) {
+      section.querySelector(".reader-title").innerHTML = '<strong>' + manga.title + '</strong><small>Selecciona un tomo</small>';
+      external.hidden = true;
+      var buttons = "";
+      for (var volume = 1; volume <= manga.total; volume += 1) {
+        buttons += '<button class="volume-card" data-volume="' + volume + '"><span>' + twoDigits(volume) + '</span><strong>Tomo ' + volume + '</strong><small>Leer PDF</small></button>';
+      }
+      content.innerHTML = '<div class="volume-shelf" data-manga="' + manga.id + '">' + buttons + '</div>';
+      reader.classList.add("open");
+      section.classList.add("reader-active");
+      document.body.style.overflow = "hidden";
+    }
+
+    function showPdf(manga, volume) {
+      var driveId = manga.driveIds && manga.driveIds[volume - 1];
+      var path = driveId ? "https://drive.google.com/file/d/" + driveId + "/preview" : pdfPath(manga, volume);
+      var openPath = driveId ? "https://drive.google.com/file/d/" + driveId + "/view" : path;
+      section.querySelector(".reader-title").innerHTML = '<strong>' + manga.title + ' · Tomo ' + volume + '</strong><button class="reader-back" type="button">← Volver a los tomos</button>';
+      external.href = openPath;
+      external.hidden = false;
+      content.innerHTML = driveId
+        ? '<iframe class="pdf-viewer" src="' + path + '" title="' + manga.title + ' tomo ' + volume + '" allow="autoplay" loading="lazy"></iframe>'
+        : '<object class="pdf-viewer" data="' + path + '" type="application/pdf"><div class="pdf-fallback"><span>📖</span><h3>No se pudo mostrar el PDF aquí</h3><p>Comprueba que el archivo se llame <strong>tomo-' + twoDigits(volume) + '.pdf</strong>.</p><a href="' + path + '" target="_blank">Abrir el PDF</a></div></object>';
+      var back = section.querySelector(".reader-back");
+      if (back) back.addEventListener("click", function () { showShelf(manga); });
+    }
+
+    grid.addEventListener("click", function (event) {
+      var readId = event.target.dataset.read;
+      var favoriteId = event.target.dataset.favorite;
+      if (readId) showShelf(mangas.find(function (item) { return item.id === readId; }));
+      if (favoriteId) {
+        var index = favorites.indexOf(favoriteId);
+        if (index === -1) favorites.push(favoriteId); else favorites.splice(index, 1);
+        localStorage.setItem("less-manga-favorites", JSON.stringify(favorites));
+        render();
+      }
+    });
+    content.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-volume]");
+      var shelf = event.target.closest("[data-manga]");
+      if (!button || !shelf) return;
+      var manga = mangas.find(function (item) { return item.id === shelf.dataset.manga; });
+      showPdf(manga, Number(button.dataset.volume));
+    });
+    search.addEventListener("input", render);
+    filter.addEventListener("click", function () { onlyFavorites = !onlyFavorites; filter.textContent = onlyFavorites ? "♥ Ver todos" : "♡ Mis favoritos"; render(); });
+    function closeReader() { reader.classList.remove("open"); section.classList.remove("reader-active"); content.innerHTML = ""; document.body.style.overflow = ""; }
+    section.querySelector(".reader-close").addEventListener("click", closeReader);
+    document.addEventListener("keydown", function (event) { if (event.key === "Escape" && reader.classList.contains("open")) closeReader(); });
+    render();
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true }); else init();
+})();

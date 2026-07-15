@@ -1,0 +1,28 @@
+COMO AGREGAR LOS PDF
+
+Las portadas permanecen directamente dentro de assets/manga/.
+
+Para los mangas crea estas carpetas dentro de assets/manga/pdfs/:
+
+phantom-blood
+battle-tendency
+stardust-crusaders
+diamond-unbreakable
+golden-wind
+stone-ocean
+steel-ball-run
+jojolion
+
+Dentro de cada carpeta guarda los tomos con dos digitos:
+
+tomo-01.pdf
+tomo-02.pdf
+tomo-03.pdf
+
+Ejemplo completo:
+
+assets/manga/pdfs/phantom-blood/tomo-01.pdf
+assets/manga/pdfs/phantom-blood/tomo-02.pdf
+
+No es necesario editar el codigo. La biblioteca ya genera los botones y las
+rutas de todos los tomos automaticamente.

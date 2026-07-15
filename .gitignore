@@ -1,0 +1,5 @@
+# Los PDF se leen desde Google Drive y no deben subirse al repositorio.
+assets/manga/pdfs/
+
+# Archivos temporales de descargas incompletas.
+*.crdownload
