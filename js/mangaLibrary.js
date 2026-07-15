@@ -119,6 +119,14 @@
       var back = section.querySelector(".reader-back");
       if (back) back.addEventListener("click", function () { history.back(); });
 
+      var mobileDevice = window.matchMedia("(max-width: 700px)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (driveId && mobileDevice) {
+        var megabytes = Math.round(manga.driveSizes[volume - 1] / 1048576);
+        external.hidden = true;
+        content.innerHTML = '<div class="mobile-pdf-card"><span>📖</span><h3>Listo para leer</h3><p>Este tomo pesa aproximadamente <strong>' + megabytes + ' MB</strong>. En celular se abrirá con el lector PDF del teléfono.</p><a class="mobile-pdf-open" href="' + path + '" target="_blank" rel="noopener">Abrir tomo ' + volume + '</a><small>La descarga puede tardar según tu conexión, pero puedes seguir usando la página mientras tanto.</small></div>';
+        return;
+      }
+
       if (!driveId) {
         content.innerHTML = '<object class="pdf-viewer" data="' + path + '" type="application/pdf"><div class="pdf-fallback"><span>📖</span><h3>No se pudo mostrar el PDF aquí</h3><p>Comprueba que el archivo se llame <strong>tomo-' + twoDigits(volume) + '.pdf</strong>.</p></div></object>';
         return;
