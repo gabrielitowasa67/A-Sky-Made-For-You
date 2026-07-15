@@ -3,3 +3,5 @@ assets/manga/pdfs/
 
 # Archivos temporales de descargas incompletas.
 *.crdownload
+
+.vercel

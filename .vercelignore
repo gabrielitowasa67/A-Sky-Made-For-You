@@ -1,0 +1,5 @@
+# Los mangas se leen desde Google Drive.
+assets/manga/pdfs/
+
+# Descargas locales incompletas.
+*.crdownload
