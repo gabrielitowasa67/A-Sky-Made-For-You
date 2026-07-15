@@ -69,18 +69,15 @@
       activeBlobUrl = null;
     }
 
-    async function fetchRangeWithRetry(url, start, end, signal) {
+    async function fetchRangeWithRetry(driveId, start, end, signal) {
       var lastError;
       for (var attempt = 1; attempt <= 3; attempt += 1) {
         try {
-          var response = await fetch(url, {
-            signal: signal,
-            headers: { Range: "bytes=" + start + "-" + end }
-          });
-          if (response.status !== 200 && response.status !== 206) throw new Error("Respuesta " + response.status);
+          var response = await fetch("/api/manga-pdf?id=" + encodeURIComponent(driveId) + "&start=" + start + "&end=" + end, { signal: signal });
+          if (response.status !== 206) throw new Error("Respuesta " + response.status);
           return {
             bytes: new Uint8Array(await response.arrayBuffer()),
-            complete: response.status === 200
+            complete: false
           };
         } catch (error) {
           if (error.name === "AbortError") throw error;
@@ -131,12 +128,12 @@
       activeDownload = new AbortController();
       try {
         var total = manga.driveSizes[volume - 1];
-        var chunkSize = 8 * 1024 * 1024;
+        var chunkSize = 4 * 1024 * 1024;
         var chunks = [];
         var received = 0;
         for (var start = 0; start < total; start += chunkSize) {
           var end = Math.min(start + chunkSize - 1, total - 1);
-          var downloadPart = await fetchRangeWithRetry(path, start, end, activeDownload.signal);
+          var downloadPart = await fetchRangeWithRetry(driveId, start, end, activeDownload.signal);
           if (downloadPart.complete) {
             chunks = [downloadPart.bytes];
             received = downloadPart.bytes.length;
